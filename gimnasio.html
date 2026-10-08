@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi Gimnasio · Clientes y WhatsApp</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f5f6f8;--card:#fff;--tx:#1b1f24;--mut:#6b7280;--bd:#e3e6ea;--pri:#16a34a;--red:#dc2626;--redbg:#fee2e2;--amb:#d97706;--ambbg:#fef3c7;--ok:#15803d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1c2127;--tx:#eceff2;--mut:#9aa4af;--bd:#2b323a;--redbg:#4a1d1d;--ambbg:#4a3512;--ok:#4ade80}}
+:root[data-theme="dark"]{--bg:#111418;--card:#1c2127;--tx:#eceff2;--mut:#9aa4af;--bd:#2b323a;--redbg:#4a1d1d;--ambbg:#4a3512;--ok:#4ade80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px}
+.wrap{max-width:760px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:4px 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+button,select,input,textarea{font:inherit;color:var(--tx)}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
+.btn.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.btn.sm{padding:7px 10px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.chip{border:1px solid var(--bd);background:var(--card);border-radius:999px;padding:8px 13px;white-space:nowrap;cursor:pointer;font-weight:600;font-size:14px}
+.chip.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.alerts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.alert{border-radius:12px;padding:10px;cursor:pointer;font-weight:600}
+.alert b{font-size:22px;display:block}
+.a-red{background:var(--redbg);color:var(--red)}
+.a-amb{background:var(--ambbg);color:var(--amb)}
+input[type=search],input[type=text],select,textarea{width:100%;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px}
+textarea{min-height:110px;resize:vertical}
+.person{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--bd);border-left:6px solid var(--bd);border-radius:12px;padding:10px;margin-bottom:8px}
+.person.rojo{border-left-color:var(--red);background:var(--redbg)}
+.person.amar{border-left-color:var(--amb);background:var(--ambbg)}
+.person .info{flex:1;min-width:0}
+.person .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person .sub{color:var(--mut);font-size:13px}
+.badge{font-size:12px;font-weight:700;border-radius:999px;padding:3px 8px;display:inline-block;margin-top:3px}
+.b-red{background:var(--red);color:#fff}.b-amb{background:var(--amb);color:#fff}.b-ok{background:var(--ok);color:#fff}.b-in{background:var(--mut);color:#fff}
+.wa{background:#25d366;color:#fff;border:0;border-radius:10px;padding:9px 11px;font-weight:700;text-decoration:none;font-size:13px;white-space:nowrap}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--pri)}
+.mut{color:var(--mut);font-size:13px}
+.empty{text-align:center;color:var(--mut);padding:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🏋️ Mis clientes del gimnasio</h1>
+
+<div class="card">
+  <div class="row">
+    <label class="btn" style="cursor:pointer">📂 Cargar Excel<input id="file" type="file" accept=".xlsx,.xls,.csv" hidden></label>
+    <span class="mut" id="info">Aún no has cargado datos.</span>
+  </div>
+  <div class="mut" style="margin-top:6px">Cada vez que cargues un Excel nuevo, la lista se actualiza.</div>
+</div>
+
+<div class="alerts" id="alerts"></div>
+
+<div class="card" style="margin-top:12px">
+  <div class="chips" id="chips"></div>
+  <input type="search" id="q" placeholder="Buscar por nombre, cédula o teléfono" style="margin-top:8px">
+</div>
+
+<div class="card">
+  <b>Mensaje de WhatsApp</b>
+  <div class="row" style="margin-top:8px">
+    <select id="tpl" style="flex:1"></select>
+  </div>
+  <textarea id="msg" style="margin-top:8px" placeholder="Escribe tu mensaje. Puedes usar {nombre}, {vence} y {dias}"></textarea>
+  <div class="mut">Se reemplaza {nombre} por el nombre, {vence} por la fecha de vencimiento y {dias} por los días que faltan.</div>
+  <div class="row" style="margin-top:8px">
+    <button class="btn sec sm" id="save">💾 Guardar mensaje</button>
+    <button class="btn sec sm" id="del">🗑 Borrar</button>
+  </div>
+  <div class="mut" style="margin-top:8px">📷 Para enviar imagen: en WhatsApp toca el clip 📎 y adjunta la foto de la promoción antes de enviar.</div>
+</div>
+
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <label class="row"><input type="checkbox" id="all"> Seleccionar todos (<span id="cnt">0</span>)</label>
+    <button class="btn" id="bulk">Enviar a seleccionados</button>
+  </div>
+  <div id="queue" class="mut" style="margin-top:8px"></div>
+</div>
+
+<div id="list"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const norm=s=>String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+const DEF_TPL=[
+ {n:'Promoción',t:'Hola {nombre} 👋 ¡Tenemos una promoción especial para ti en el gimnasio! Escríbenos y te contamos los detalles 💪'},
+ {n:'Recordatorio de vencimiento',t:'Hola {nombre}, te recordamos que tu plan vence el {vence} (en {dias} días). ¡Renueva y sigue entrenando con nosotros! 💪'},
+ {n:'Plan vencido',t:'Hola {nombre}, tu plan venció el {vence}. ¡Te extrañamos! Vuelve esta semana y te tenemos una sorpresa 🎁'},
+ {n:'Reactivación (inactivos)',t:'Hola {nombre}, hace tiempo no te vemos por el gym. ¡Te invitamos a volver con un beneficio especial! 💪'}
+];
+let rows=store.get('rows',[]), tpls=store.get('tpls',DEF_TPL), filter='todos', sel=new Set(), qList=[], qi=0;
+const today=new Date();today.setHours(0,0,0,0);
+
+function toISO(v){
+  if(v==null||v==='')return '';
+  let d=null;
+  if(v instanceof Date){d=new Date(v.getTime()+43200000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')}
+  if(typeof v==='number'){d=new Date(Math.round((v-25569)*86400000)+43200000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')}
+  const s=String(v).trim();let m;
+  if(m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  if(m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/)){let y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')}
+  return '';
+}
+function mapRow(r){
+  const o={};
+  for(const k in r){
+    const n=norm(k),v=r[k];
+    if(n.includes('falta')||n.includes('vencer'))o.faltan=v;
+    else if(n==='id')o.id=v;
+    else if(n.includes('cedula')||n==='cc')o.cedula=v;
+    else if(n.includes('nombre'))o.nombre=v;
+    else if(n.includes('tel')||n.includes('cel')||n.includes('whats'))o.tel=v;
+    else if(n==='plan')o.plan=v;
+    else if(n.startsWith('inicio'))o.inicio=toISO(v);
+    else if(n.startsWith('vence'))o.vence=toISO(v);
+    else if(n==='estado')o.estado=v;
+  }
+  return o;
+}
+function calc(p){
+  let d=null;
+  if(p.vence){d=Math.round((new Date(p.vence+'T00:00:00')-today)/86400000)}
+  else if(p.faltan!==undefined&&p.faltan!==''&&!isNaN(Number(p.faltan)))d=Number(p.faltan);
+  const e=norm(p.estado);
+  let act;
+  if(e.includes('inactivo'))act=false;else if(e.includes('activo'))act=true;else act=d!==null?d>=0:true;
+  return {d,act};
+}
+function fmt(iso){if(!iso)return '—';const[a,b,c]=iso.split('-');return c+'/'+b+'/'+a}
+function phone(t){let d=String(t||'').replace(/\D/g,'');if(d.length===10)d='57'+d;return d}
+function build(p){
+  const first=String(p.nombre||'').trim().split(/\s+/)[0]||'';
+  const {d}=calc(p);
+  return $('#msg').value.replace(/\{nombre\}/gi,first).replace(/\{vence\}/gi,fmt(p.vence)).replace(/\{dias\}/gi,d===null?'':Math.max(d,0));
+}
+function link(p){return 'https://wa.me/'+phone(p.tel)+'?text='+encodeURIComponent(build(p))}
+function status(p){
+  const {d,act}=calc(p);
+  if(d!==null&&d<=0)return 'rojo';
+  if(d!==null&&d<=5&&d>=1)return 'amar';
+  return '';
+}
+function filtered(){
+  const q=norm($('#q').value);
+  return rows.filter(p=>{
+    const {d,act}=calc(p);
+    if(filter==='activos'&&!act)return false;
+    if(filter==='inactivos'&&act)return false;
+    if(filter==='porvencer'&&!(d!==null&&d>=1&&d<=5))return false;
+    if(filter==='vencidos'&&!(d!==null&&d<=0))return false;
+    if(q&&!norm([p.nombre,p.cedula,p.tel,p.id].join(' ')).includes(q))return false;
+    return true;
+  });
+}
+function render(){
+  const all=rows.map(p=>({p,...calc(p)}));
+  const act=all.filter(x=>x.act).length, ina=all.length-act;
+  const pv=all.filter(x=>x.d!==null&&x.d>=1&&x.d<=5).length, ve=all.filter(x=>x.d!==null&&x.d<=0).length;
+  $('#info').textContent=rows.length?rows.length+' clientes cargados':'Aún no has cargado datos.';
+  $('#alerts').innerHTML=
+   '<div class="alert a-amb" data-f="porvencer"><b>'+pv+'</b>🟠 Vencen en 5 días o menos</div>'+
+   '<div class="alert a-red" data-f="vencidos"><b>'+ve+'</b>🔴 Vencidos / vencen hoy</div>';
+  const chips=[['todos','Todos ('+all.length+')'],['activos','Activos ('+act+')'],['inactivos','Inactivos ('+ina+')'],['porvencer','Por vencer ('+pv+')'],['vencidos','Vencidos ('+ve+')']];
+  $('#chips').innerHTML=chips.map(c=>'<button class="chip'+(filter===c[0]?' on':'')+'" data-f="'+c[0]+'">'+c[1]+'</button>').join('');
+  const list=filtered();
+  $('#cnt').textContent=list.length;
+  $('#all').checked=list.length>0&&list.every(p=>sel.has(p._i));
+  $('#list').innerHTML=list.length?list.map(p=>{
+    const {d,act}=calc(p),s=status(p);
+    let b;
+    if(d===null)b='<span class="badge '+(act?'b-ok':'b-in')+'">'+(act?'Activo':'Inactivo')+'</span>';
+    else if(d<0)b='<span class="badge b-red">Venció hace '+(-d)+' d</span>';
+    else if(d===0)b='<span class="badge b-red">Vence HOY</span>';
+    else if(d<=5)b='<span class="badge b-amb">Vence en '+d+' d</span>';
+    else b='<span class="badge b-ok">Faltan '+d+' d</span>';
+    return '<div class="person '+s+'"><input type="checkbox" data-i="'+p._i+'"'+(sel.has(p._i)?' checked':'')+'>'+
+     '<div class="info"><div class="nm">'+esc(p.nombre)+'</div><div class="sub">'+esc(p.plan||'')+' · vence '+fmt(p.vence)+' · '+(act?'Activo':'Inactivo')+'</div>'+b+'</div>'+
+     '<a class="wa" target="_blank" rel="noopener" href="'+link(p)+'">WhatsApp</a></div>';
+  }).join(''):'<div class="empty">'+(rows.length?'No hay clientes con ese filtro.':'Carga tu Excel para empezar.')+'</div>';
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderTpl(selIdx){
+  $('#tpl').innerHTML='<option value="-1">— Escribir mensaje nuevo —</option>'+tpls.map((t,i)=>'<option value="'+i+'">'+esc(t.n)+'</option>').join('');
+  if(selIdx!==undefined)$('#tpl').value=selIdx;
+}
+$('#file').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:''}).map(mapRow).filter(p=>p.nombre||p.tel);
+      data.forEach((p,i)=>p._i=i);
+      rows=data;sel=new Set();store.set('rows',rows);render();
+    }catch(err){alert('No pude leer el archivo. Revisa que sea un Excel (.xlsx) con encabezados en la primera fila.')}
+  };
+  r.readAsArrayBuffer(f);e.target.value='';
+});
+document.addEventListener('click',e=>{
+  const f=e.target.closest('[data-f]');
+  if(f){filter=f.dataset.f;render();}
+});
+$('#q').addEventListener('input',render);
+$('#list').addEventListener('change',e=>{
+  const i=e.target.dataset.i;if(i===undefined)return;
+  e.target.checked?sel.add(+i):sel.delete(+i);
+  $('#all').checked=filtered().every(p=>sel.has(p._i));
+});
+$('#all').addEventListener('change',e=>{
+  filtered().forEach(p=>e.target.checked?sel.add(p._i):sel.delete(p._i));render();
+});
+$('#msg').addEventListener('input',()=>{document.querySelectorAll('.wa').forEach((a,i)=>{});render()});
+$('#tpl').addEventListener('change',()=>{
+  const i=+$('#tpl').value;$('#msg').value=i>=0?tpls[i].t:'';render();
+});
+$('#save').addEventListener('click',()=>{
+  const t=$('#msg').value.trim();if(!t){alert('Escribe un mensaje primero.');return}
+  const i=+$('#tpl').value;
+  if(i>=0){tpls[i].t=t}
+  else{const n=prompt('¿Qué nombre le ponemos a este mensaje?');if(!n)return;tpls.push({n,t})}
+  store.set('tpls',tpls);renderTpl(i>=0?i:tpls.length-1);
+});
+$('#del').addEventListener('click',()=>{
+  const i=+$('#tpl').value;if(i<0)return;
+  if(confirm('¿Borrar "'+tpls[i].n+'"?')){tpls.splice(i,1);store.set('tpls',tpls);renderTpl(-1);$('#msg').value=''}
+});
+$('#bulk').addEventListener('click',()=>{
+  if(!$('#msg').value.trim()){alert('Escribe o elige un mensaje primero.');return}
+  qList=rows.filter(p=>sel.has(p._i)&&phone(p.tel));qi=0;
+  if(!qList.length){alert('Selecciona al menos un cliente.');return}
+  nextQ();
+});
+function nextQ(){
+  if(qi>=qList.length){$('#queue').innerHTML='✅ Listo, terminaste con todos.';qList=[];return}
+  const p=qList[qi];qi++;
+  window.open(link(p),'_blank');
+  $('#queue').innerHTML='Abierto: <b>'+esc(p.nombre)+'</b> ('+qi+' de '+qList.length+') — envía el mensaje en WhatsApp y vuelve aquí. '+
+   (qi<qList.length?'<br><button class="btn sm" style="margin-top:6px" id="nx">Siguiente →</button>':'<br>✅ Era el último.');
+  const nx=$('#nx');if(nx)nx.onclick=nextQ;
+}
+rows.forEach((p,i)=>p._i=i);
+renderTpl(-1);render();
+</script>
+</body>
+</html>
